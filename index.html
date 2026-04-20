@@ -8,10 +8,8 @@
 <style>
 :root {
   --black:    #0A0A0A;
-  --dark1:    #111111;
   --dark2:    #1A1A1A;
   --dark3:    #242424;
-  --dark4:    #2E2E2E;
   --border:   #333333;
   --border2:  #3F3F3F;
   --orange:   #FF6B1A;
@@ -33,6 +31,17 @@
   --blue-border:  #1A5080;
   --blue-text:    #5BB8FF;
 
+  /* deadline highlight colours */
+  --overdue-bg:     #3A0000;
+  --overdue-border: #CC2222;
+  --overdue-text:   #FF4444;
+  --due-today-bg:   #2A1800;
+  --due-today-border:#CC7700;
+  --due-today-text: #FFCC00;
+  --due-soon-bg:    #001A2A;
+  --due-soon-border:#005599;
+  --due-soon-text:  #66CCFF;
+
   --font-display: 'Barlow Condensed', sans-serif;
   --font-body:    'Barlow', sans-serif;
 }
@@ -51,98 +60,93 @@ body {
 
 body::before {
   content: '';
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   background:
     repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px),
     repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px);
-  pointer-events: none;
-  z-index: 0;
+  pointer-events: none; z-index: 0;
 }
 
-.tracker { max-width: 1160px; margin: 0 auto; position: relative; z-index: 1; }
+.tracker { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
 
 /* ── Header ── */
 .header-bar {
-  background: var(--dark2);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--orange);
-  border-radius: 4px 4px 8px 8px;
-  padding: 20px 28px;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  position: relative;
-  overflow: hidden;
+  background: var(--dark2); border: 1px solid var(--border);
+  border-top: 3px solid var(--orange); border-radius: 4px 4px 8px 8px;
+  padding: 20px 28px; margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; position: relative; overflow: hidden;
 }
 .header-bar::after {
-  content: '🏋️';
-  position: absolute;
-  right: 20px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 110px;
-  opacity: 0.05;
-  pointer-events: none;
-  filter: grayscale(1);
+  content: '🏋️'; position: absolute; right: 20px; top: 50%;
+  transform: translateY(-50%); font-size: 110px; opacity: 0.05;
+  pointer-events: none; filter: grayscale(1);
 }
 .header-eyebrow {
-  font-family: var(--font-display);
-  font-size: 11px; font-weight: 600;
-  letter-spacing: 3px; text-transform: uppercase;
-  color: var(--orange); margin-bottom: 4px;
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--orange); margin-bottom: 4px;
 }
 .header-title {
-  font-family: var(--font-display);
-  font-size: 30px; font-weight: 800;
-  letter-spacing: -0.5px; text-transform: uppercase;
-  color: var(--white); line-height: 1;
+  font-family: var(--font-display); font-size: 30px; font-weight: 800;
+  letter-spacing: -0.5px; text-transform: uppercase; color: var(--white); line-height: 1;
 }
 .header-title span { color: var(--orange); }
 .header-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
 .save-badge {
   display: inline-flex; align-items: center; gap: 7px;
-  font-family: var(--font-display);
-  font-size: 12px; font-weight: 600;
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
   letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--green-text);
-  background: var(--green-bg);
-  border: 1px solid var(--green-border);
-  border-radius: 4px; padding: 6px 14px;
+  color: var(--green-text); background: var(--green-bg);
+  border: 1px solid var(--green-border); border-radius: 4px; padding: 6px 14px;
   transition: opacity 0.4s;
 }
 .save-badge.hidden { opacity: 0; }
-.save-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%; background: var(--green-text);
-  animation: blink 1.8s infinite;
-}
+.save-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-text); animation: blink 1.8s infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.reset-info {
+  font-size: 10px; color: var(--muted); font-family: var(--font-display);
+  letter-spacing: 1px; text-transform: uppercase; text-align: right;
+}
+.reset-info span { color: var(--orange); }
 
 /* ── Stats ── */
 .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
 .stat {
-  background: var(--dark2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 14px 18px;
-  position: relative; overflow: hidden;
-  transition: border-color 0.2s;
+  background: var(--dark2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 14px 18px; position: relative; overflow: hidden; transition: border-color 0.2s;
 }
 .stat:hover { border-color: var(--border2); }
-.stat-accent {
-  position: absolute; top: 0; left: 0;
-  width: 3px; height: 100%;
-  border-radius: 6px 0 0 6px;
-}
+.stat-accent { position: absolute; top: 0; left: 0; width: 3px; height: 100%; border-radius: 6px 0 0 6px; }
 .stat-label {
   font-family: var(--font-display); font-size: 10px; font-weight: 600;
   color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
 }
-.stat-num {
-  font-family: var(--font-display); font-size: 36px; font-weight: 800;
-  line-height: 1; letter-spacing: -1px;
+.stat-num { font-family: var(--font-display); font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+
+/* ── Deadline summary bar ── */
+.deadline-bar {
+  display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.dl-chip {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-display); font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  border-radius: 4px; padding: 6px 14px; cursor: pointer;
+  transition: filter 0.15s;
+  border: 1px solid;
+}
+.dl-chip:hover { filter: brightness(1.2); }
+.dl-chip.overdue  { background: var(--overdue-bg);  color: var(--overdue-text);  border-color: var(--overdue-border); }
+.dl-chip.due-today{ background: var(--due-today-bg); color: var(--due-today-text);border-color: var(--due-today-border);}
+.dl-chip.due-soon { background: var(--due-soon-bg);  color: var(--due-soon-text); border-color: var(--due-soon-border); }
+.dl-chip.active   { filter: brightness(1.3); outline: 2px solid currentColor; outline-offset: 2px; }
+.dl-chip .dl-count {
+  background: rgba(255,255,255,0.15); border-radius: 3px;
+  padding: 1px 7px; font-size: 13px; font-weight: 800;
 }
 
 /* ── Legend ── */
@@ -157,20 +161,29 @@ body::before {
   letter-spacing: 1px; text-transform: uppercase; color: var(--muted2);
 }
 .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.leg-sep { width: 1px; height: 14px; background: var(--border); margin: 0 4px; }
 
 /* ── Controls ── */
 .controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
 .controls select,
-.controls input[type=text] {
+.controls input[type=text],
+.controls input[type=date] {
   font-family: var(--font-body); font-size: 13px;
   height: 36px; padding: 0 12px; border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--dark2); color: var(--white); outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s; color-scheme: dark;
 }
 .controls select option { background: var(--dark3); }
-.controls input[type=text] { flex: 1; min-width: 150px; }
+.controls input[type=text] { flex: 1; min-width: 140px; }
+.controls input[type=date] { width: 148px; }
 .controls select:focus, .controls input:focus { border-color: var(--orange); }
+
+.filter-label {
+  font-family: var(--font-display); font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+  white-space: nowrap; align-self: center;
+}
 
 .btn-add {
   height: 36px; padding: 0 18px; border-radius: 4px; border: none;
@@ -194,7 +207,7 @@ body::before {
 .btn-reset {
   height: 36px; padding: 0 14px; border-radius: 4px;
   border: 1px solid var(--red-border); background: transparent; color: var(--red-text);
-  font-family: var(--font-body); font-size: 13px; cursor: pointer; margin-left: auto;
+  font-family: var(--font-body); font-size: 13px; cursor: pointer;
   transition: background 0.15s;
 }
 .btn-reset:hover { background: var(--red-bg); }
@@ -208,11 +221,9 @@ body::before {
 }
 .add-form.open { display: block; }
 @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
-
 .form-section-title {
   font-family: var(--font-display); font-size: 12px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  color: var(--orange); margin-bottom: 12px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--orange); margin-bottom: 12px;
 }
 .add-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .add-row-wide { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
@@ -220,7 +231,9 @@ body::before {
   display: block; font-family: var(--font-display); font-size: 10px; font-weight: 700;
   letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
 }
-.form-group input, .form-group select, .form-group textarea {
+.form-group input,
+.form-group select,
+.form-group textarea {
   width: 100%; font-family: var(--font-body); font-size: 13px;
   padding: 8px 11px; border-radius: 4px;
   border: 1px solid var(--border);
@@ -231,14 +244,12 @@ body::before {
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--orange); }
 .form-group textarea { resize: none; height: 60px; }
 .form-group input[type=date] { cursor: pointer; color-scheme: dark; }
-
 .form-btns { display: flex; gap: 8px; }
 .btn-save {
   height: 36px; padding: 0 20px; border-radius: 4px;
   background: var(--orange); color: var(--black); border: none;
   font-family: var(--font-display); font-size: 14px; font-weight: 700;
-  letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
-  transition: background 0.15s;
+  letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: background 0.15s;
 }
 .btn-save:hover { background: var(--orange2); }
 .btn-cancel {
@@ -254,13 +265,15 @@ body::before {
   overflow-x: auto; border-radius: 6px;
   border: 1px solid var(--border); background: var(--dark2);
 }
-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+/* No fixed table-layout — let columns breathe, task col is flexible */
 col.c-date  { width: 112px; }
-col.c-task  { width: 230px; }
-col.c-cat   { width: 80px; }
-col.c-pri   { width: 80px; }
-col.c-sta   { width: 150px; }
-col.c-notes { width: 190px; }
+col.c-task  { } /* auto / flex */
+col.c-cat   { width: 82px; }
+col.c-pri   { width: 82px; }
+col.c-sta   { width: 152px; }
+col.c-notes { width: 200px; }
 col.c-del   { width: 38px; }
 
 thead th {
@@ -269,8 +282,7 @@ thead th {
   font-family: var(--font-display); font-weight: 700;
   font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
   cursor: pointer; user-select: none; white-space: nowrap;
-  border-bottom: 1px solid var(--border);
-  transition: color 0.15s;
+  border-bottom: 1px solid var(--border); transition: color 0.15s;
 }
 thead th:hover { color: var(--orange); }
 thead th.sorted { color: var(--orange); }
@@ -280,18 +292,41 @@ thead th.sorted .sort-arrow { opacity: 1; }
 tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: filter 0.1s; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { filter: brightness(1.1); }
-tbody td { padding: 8px 12px; vertical-align: middle; font-size: 12px; }
+tbody td { padding: 7px 12px; vertical-align: top; font-size: 12px; }
 
-tbody td input[type=text],
+/* ── Auto-expanding task textarea ── */
+tbody td.td-task {
+  vertical-align: middle;
+  min-width: 180px;
+}
+.task-textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 12px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.45;
+  padding: 0;
+  min-height: 18px;
+  display: block;
+  /* auto-height via JS */
+}
+.task-textarea:focus {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
 tbody td input[type=date],
 tbody td select {
   width: 100%; font-family: var(--font-body); font-size: 12px;
   border: none; background: transparent; color: inherit; outline: none; cursor: pointer;
 }
 tbody td input[type=date] { color-scheme: dark; }
-tbody td input[type=text]:focus {
-  text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px;
-}
 
 .del-btn {
   background: none; border: none; cursor: pointer; color: var(--muted);
@@ -301,7 +336,7 @@ tbody td input[type=text]:focus {
 }
 .del-btn:hover { color: var(--red-text); background: var(--red-bg); }
 
-/* ── Row colours (dark versions) ── */
+/* ── Row colours by status ── */
 tr.s-completed  { background: var(--green-bg) !important; }
 tr.s-completed  td { color: var(--green-text); }
 tr.s-inprogress { background: var(--amber-bg) !important; }
@@ -311,10 +346,33 @@ tr.s-notstarted td { color: var(--red-text); }
 tr.s-waiting    { background: var(--blue-bg) !important; }
 tr.s-waiting    td { color: var(--blue-text); }
 
-tr.s-completed  td input, tr.s-completed  td select { color: var(--green-text); }
-tr.s-inprogress td input, tr.s-inprogress td select { color: var(--amber-text); }
-tr.s-notstarted td input, tr.s-notstarted td select { color: var(--red-text); }
-tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
+tr.s-completed  td input, tr.s-completed  td select, tr.s-completed  .task-textarea { color: var(--green-text); }
+tr.s-inprogress td input, tr.s-inprogress td select, tr.s-inprogress .task-textarea { color: var(--amber-text); }
+tr.s-notstarted td input, tr.s-notstarted td select, tr.s-notstarted .task-textarea { color: var(--red-text); }
+tr.s-waiting    td input, tr.s-waiting    td select, tr.s-waiting    .task-textarea { color: var(--blue-text); }
+
+/* ── Deadline row overlays (override status bg) ── */
+tr.dl-overdue   { background: var(--overdue-bg)   !important; border-left: 3px solid var(--overdue-border) !important; }
+tr.dl-overdue   td { color: var(--overdue-text) !important; }
+tr.dl-overdue   td input, tr.dl-overdue   td select, tr.dl-overdue   .task-textarea { color: var(--overdue-text) !important; }
+
+tr.dl-due-today { background: var(--due-today-bg) !important; border-left: 3px solid var(--due-today-border) !important; }
+tr.dl-due-today td { color: var(--due-today-text) !important; }
+tr.dl-due-today td input, tr.dl-due-today td select, tr.dl-due-today .task-textarea { color: var(--due-today-text) !important; }
+
+tr.dl-due-soon  { background: var(--due-soon-bg)  !important; border-left: 3px solid var(--due-soon-border) !important; }
+tr.dl-due-soon  td { color: var(--due-soon-text) !important; }
+tr.dl-due-soon  td input, tr.dl-due-soon  td select, tr.dl-due-soon  .task-textarea { color: var(--due-soon-text) !important; }
+
+/* deadline badge on date cell */
+.dl-badge {
+  display: inline-block; font-family: var(--font-display);
+  font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  border-radius: 3px; padding: 1px 5px; margin-top: 3px; vertical-align: middle;
+}
+.dl-badge.overdue   { background: var(--overdue-border);  color: var(--white); }
+.dl-badge.due-today { background: var(--due-today-border); color: var(--black); }
+.dl-badge.due-soon  { background: var(--due-soon-border);  color: var(--white); }
 
 .pri-high { font-weight: 700; color: var(--red-text); }
 .pri-med  { font-weight: 700; color: var(--amber-text); }
@@ -335,27 +393,62 @@ tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
 }
 .toast.show { transform: none; opacity: 1; }
 
+/* ── Modal confirm (nicer than browser confirm) ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--dark2); border: 1px solid var(--border);
+  border-top: 3px solid var(--orange); border-radius: 8px;
+  padding: 24px 28px; max-width: 380px; width: 90%;
+  animation: slideDown 0.2s ease;
+}
+.modal-title {
+  font-family: var(--font-display); font-size: 16px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--white); margin-bottom: 8px;
+}
+.modal-body { font-size: 13px; color: var(--muted2); line-height: 1.5; margin-bottom: 20px; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-confirm {
+  height: 34px; padding: 0 18px; border-radius: 4px; border: none;
+  background: var(--orange); color: var(--black);
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+}
+.modal-cancel {
+  height: 34px; padding: 0 14px; border-radius: 4px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  font-family: var(--font-body); font-size: 13px; cursor: pointer;
+}
+
 @media (max-width: 640px) {
   .stats-row { grid-template-columns: repeat(2,1fr); }
   .add-row, .add-row-wide { grid-template-columns: 1fr; }
   .header-title { font-size: 22px; }
+  .deadline-bar { gap: 6px; }
 }
 </style>
 </head>
 <body>
 <div class="tracker">
 
+  <!-- Header -->
   <div class="header-bar">
     <div class="header-left">
       <div class="header-eyebrow">Australian Gym VA</div>
       <div class="header-title">Task Tracker &mdash; <span id="main-date">…</span></div>
       <div class="header-sub">Geramel Tapis &nbsp;·&nbsp; Super Sidekick &nbsp;·&nbsp; <span id="day-label"></span></div>
     </div>
-    <div class="save-badge hidden" id="save-badge">
-      <div class="save-dot"></div> Saved
+    <div class="header-right">
+      <div class="save-badge hidden" id="save-badge"><div class="save-dot"></div> Saved</div>
+      <div class="reset-info">Daily reset: <span id="next-reset-label">—</span></div>
     </div>
   </div>
 
+  <!-- Stats -->
   <div class="stats-row">
     <div class="stat">
       <div class="stat-accent" style="background:var(--orange)"></div>
@@ -379,15 +472,26 @@ tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
     </div>
   </div>
 
+  <!-- Deadline chips -->
+  <div class="deadline-bar" id="deadline-bar"></div>
+
+  <!-- Legend -->
   <div class="legend">
     <div class="leg-item"><div class="leg-dot" style="background:var(--green-text)"></div>Completed</div>
     <div class="leg-item"><div class="leg-dot" style="background:var(--amber-text)"></div>In Progress</div>
     <div class="leg-item"><div class="leg-dot" style="background:var(--red-text)"></div>Not Started</div>
     <div class="leg-item"><div class="leg-dot" style="background:var(--blue-text)"></div>Waiting for Client</div>
+    <div class="leg-sep"></div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--overdue-text)"></div>Overdue</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--due-today-text)"></div>Due Today</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--due-soon-text)"></div>Due Soon (2 days)</div>
   </div>
 
+  <!-- Controls -->
   <div class="controls">
     <input type="text" id="search" placeholder="🔍  Search tasks…" oninput="render()">
+    <span class="filter-label">Date:</span>
+    <input type="date" id="filter-date" onchange="render()" title="Filter by date">
     <select id="filter-cat" onchange="render()">
       <option value="">All categories</option>
       <option value="Daily">Daily</option>
@@ -409,9 +513,10 @@ tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
     </select>
     <button class="btn-clear" onclick="clearFilters()">Clear</button>
     <button class="btn-add" onclick="toggleAddForm()">+ Add Task</button>
-    <button class="btn-reset" onclick="resetData()">↺ Reset</button>
+    <button class="btn-reset" onclick="confirmReset()">↺ Reset</button>
   </div>
 
+  <!-- Add Form -->
   <div class="add-form" id="add-form">
     <div class="form-section-title">⚡ New Task</div>
     <div class="add-row">
@@ -424,9 +529,7 @@ tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
       </div>
     </div>
     <div class="add-row-wide">
-      <div class="form-group"><label>Date</label>
-        <input type="date" id="f-date">
-      </div>
+      <div class="form-group"><label>Due Date</label><input type="date" id="f-date"></div>
       <div class="form-group"><label>Status</label>
         <select id="f-sta"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Waiting for Client</option></select>
       </div>
@@ -440,6 +543,7 @@ tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
     </div>
   </div>
 
+  <!-- Table -->
   <div class="table-wrap">
     <table>
       <colgroup>
@@ -448,7 +552,7 @@ tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
       </colgroup>
       <thead>
         <tr>
-          <th onclick="sortBy('date')">Date <span class="sort-arrow" id="arr-date">↕</span></th>
+          <th onclick="sortBy('date')">Due Date <span class="sort-arrow" id="arr-date">↕</span></th>
           <th onclick="sortBy('task')">Task description <span class="sort-arrow" id="arr-task">↕</span></th>
           <th onclick="sortBy('cat')">Category <span class="sort-arrow" id="arr-cat">↕</span></th>
           <th onclick="sortBy('pri')">Priority <span class="sort-arrow" id="arr-pri">↕</span></th>
@@ -462,27 +566,75 @@ tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
   </div>
 </div>
 
+<!-- Custom confirm modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Confirm</div>
+    <div class="modal-body" id="modal-body">Are you sure?</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="modal-confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Dynamic date — always reflects the real current day ──
+// ────────────────────────────────────────────────
+// DATE HELPERS
+// ────────────────────────────────────────────────
 const today = new Date();
+today.setHours(0,0,0,0);
 const todayISO = today.toISOString().split('T')[0];
-const todayDisplay = today.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
+const todayDisplay = today.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 document.getElementById('main-date').textContent = todayDisplay;
 document.getElementById('day-label').textContent = DAYS[today.getDay()];
 document.getElementById('f-date').value = todayISO;
 
+// next midnight reset countdown
+function updateResetLabel() {
+  const now = new Date();
+  const midnight = new Date(now); midnight.setHours(24,0,0,0);
+  const diff = midnight - now;
+  const h = Math.floor(diff/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  document.getElementById('next-reset-label').textContent = `${h}h ${m}m`;
+}
+updateResetLabel();
+setInterval(updateResetLabel, 60000);
+
+function isoToDate(iso) {
+  if (!iso) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const d = new Date(iso); return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  }
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+
 function displayToISO(s) {
   if (!s) return todayISO;
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const d = new Date(s);
-  return isNaN(d) ? todayISO : d.toISOString().split('T')[0];
+  const d = new Date(s); return isNaN(d)?todayISO:d.toISOString().split('T')[0];
 }
 
-// ── Defaults ──
+// deadline class for a task
+function deadlineClass(t) {
+  if (t.sta === 'Completed') return ''; // completed — no deadline highlight
+  const d = isoToDate(t.date); if (!d) return '';
+  const diff = Math.round((d - today) / 86400000);
+  if (diff < 0)  return 'overdue';
+  if (diff === 0) return 'due-today';
+  if (diff <= 2) return 'due-soon';
+  return '';
+}
+
+// ────────────────────────────────────────────────
+// DEFAULT TASKS
+// ────────────────────────────────────────────────
 const DEFAULT_TASKS = [
   { id:1,  date:todayISO, task:'Check member inbox — respond to all enquiries within 2 hours', cat:'Daily', pri:'High', sta:'Not Started', notes:'Check email, Facebook DMs, booking system messages' },
   { id:2,  date:todayISO, task:'Review Red Flag & Orange Flag report', cat:'Daily', pri:'High', sta:'Not Started', notes:'Flag members at risk — notify owner of urgent cases' },
@@ -516,37 +668,66 @@ const DEFAULT_TASKS = [
   { id:30, date:todayISO, task:'Check upcoming public holidays (state-specific)', cat:'Monthly', pri:'Low', sta:'Not Started', notes:'Adjust comms schedule and follow-up calendar accordingly' },
 ];
 
-// ── Storage ──
-const STORAGE_KEY = 'gymva_tasks_v3';
-const NEXT_ID_KEY = 'gymva_nextid_v3';
+// ────────────────────────────────────────────────
+// STORAGE + DAILY RESET
+// ────────────────────────────────────────────────
+const STORAGE_KEY   = 'gymva_tasks_v4';
+const NEXT_ID_KEY   = 'gymva_nextid_v4';
+const LAST_DATE_KEY = 'gymva_lastdate_v4';
 
 function loadData() {
-  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
-  return DEFAULT_TASKS.map(t => ({...t}));
+  // Check if it's a new day → reset statuses
+  const lastDate = localStorage.getItem(LAST_DATE_KEY);
+  let tasks = null;
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) tasks = JSON.parse(r); } catch(e) {}
+
+  if (!tasks) {
+    // First load ever
+    localStorage.setItem(LAST_DATE_KEY, todayISO);
+    return DEFAULT_TASKS.map(t => ({...t}));
+  }
+
+  if (lastDate !== todayISO) {
+    // New day — reset all task statuses back to "Not Started"
+    // but keep any tasks the user added (don't wipe custom tasks)
+    tasks = tasks.map(t => ({ ...t, sta: 'Not Started' }));
+    localStorage.setItem(LAST_DATE_KEY, todayISO);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    showToast('🌅 New day — all task statuses reset!');
+  }
+  return tasks;
 }
+
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.setItem(NEXT_ID_KEY, nextId);
+  localStorage.setItem(LAST_DATE_KEY, todayISO);
   showSaveBadge();
 }
-function resetData() {
-  if (!confirm('Reset all tasks back to defaults? This will delete any changes and added tasks.')) return;
+
+function hardReset() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(NEXT_ID_KEY);
+  localStorage.removeItem(LAST_DATE_KEY);
   data = DEFAULT_TASKS.map(t => ({...t}));
   nextId = 31;
   render();
   showToast('Tasks reset to defaults');
 }
 
-// ── State ──
+// ────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────
 let data = loadData();
 let nextId = parseInt(localStorage.getItem(NEXT_ID_KEY) || '31');
-let sortCol = 'cat', sortDir = 1;
+let sortCol = 'date', sortDir = 1;
+let dlFilter = ''; // 'overdue' | 'due-today' | 'due-soon' | ''
 const PRI_ORDER = { High:0, Medium:1, Low:2 };
 const STA_ORDER = { 'Not Started':0, 'In Progress':1, 'Completed':2, 'Waiting for Client':3 };
 
-// ── UI helpers ──
+// ────────────────────────────────────────────────
+// UI HELPERS
+// ────────────────────────────────────────────────
 let saveBadgeTimer;
 function showSaveBadge() {
   const el = document.getElementById('save-badge');
@@ -559,25 +740,76 @@ function showToast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
+// Custom modal
+let _modalCallback = null;
+function openModal(title, body, confirmLabel, cb) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-confirm-btn').textContent = confirmLabel || 'Confirm';
+  _modalCallback = cb;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); _modalCallback = null; }
+document.getElementById('modal-confirm-btn').onclick = function() { closeModal(); if (_modalCallback) _modalCallback(); };
+
+function confirmReset() {
+  openModal('Reset Tasks', 'Reset all tasks back to defaults? This will delete any changes and custom tasks you added.', '↺ Reset', hardReset);
+}
+
+// ────────────────────────────────────────────────
+// AUTO-EXPAND TEXTAREA
+// ────────────────────────────────────────────────
+function autoExpand(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// ────────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────────
 function statusClass(s) {
   return s==='Completed'?'s-completed':s==='In Progress'?'s-inprogress':s==='Not Started'?'s-notstarted':s==='Waiting for Client'?'s-waiting':'';
 }
 function priClass(p) { return p==='High'?'pri-high':p==='Medium'?'pri-med':'pri-low'; }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
+function updateDeadlineBar() {
+  const overdue   = data.filter(t => deadlineClass(t)==='overdue').length;
+  const dueToday  = data.filter(t => deadlineClass(t)==='due-today').length;
+  const dueSoon   = data.filter(t => deadlineClass(t)==='due-soon').length;
+
+  const bar = document.getElementById('deadline-bar');
+  bar.innerHTML = '';
+
+  function chip(label, cls, count) {
+    if (count === 0) return;
+    const el = document.createElement('div');
+    el.className = 'dl-chip ' + cls + (dlFilter===cls?' active':'');
+    el.innerHTML = `${label} <span class="dl-count">${count}</span>`;
+    el.onclick = () => { dlFilter = dlFilter===cls?'':cls; render(); };
+    bar.appendChild(el);
+  }
+  chip('⚠ Overdue', 'overdue', overdue);
+  chip('⏰ Due Today', 'due-today', dueToday);
+  chip('🔜 Due Soon', 'due-soon', dueSoon);
+}
+
 function render() {
-  const search = document.getElementById('search').value.toLowerCase();
-  const fcat = document.getElementById('filter-cat').value;
-  const fpri = document.getElementById('filter-pri').value;
-  const fsta = document.getElementById('filter-sta').value;
+  const search  = document.getElementById('search').value.toLowerCase();
+  const fdate   = document.getElementById('filter-date').value;
+  const fcat    = document.getElementById('filter-cat').value;
+  const fpri    = document.getElementById('filter-pri').value;
+  const fsta    = document.getElementById('filter-sta').value;
 
   let rows = data.filter(t => {
-    if (fcat && t.cat!==fcat) return false;
-    if (fpri && t.pri!==fpri) return false;
-    if (fsta && t.sta!==fsta) return false;
+    if (fdate && t.date !== fdate) return false;
+    if (fcat  && t.cat  !== fcat)  return false;
+    if (fpri  && t.pri  !== fpri)  return false;
+    if (fsta  && t.sta  !== fsta)  return false;
+    if (dlFilter && deadlineClass(t) !== dlFilter) return false;
     if (search && !t.task.toLowerCase().includes(search) && !(t.notes||'').toLowerCase().includes(search)) return false;
     return true;
   });
@@ -595,27 +827,61 @@ function render() {
     tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No tasks match your filters.</td></tr>';
   } else {
     tbody.innerHTML = rows.map(t => {
-      const iso = /^\d{4}-\d{2}-\d{2}$/.test(t.date) ? t.date : displayToISO(t.date);
-      return `<tr class="${statusClass(t.sta)}" id="row-${t.id}">
-        <td><input type="date" value="${esc(iso)}" onchange="update(${t.id},'date',this.value)"></td>
-        <td><input type="text" value="${esc(t.task)}" onchange="update(${t.id},'task',this.value)"></td>
+      const iso = /^\d{4}-\d{2}-\d{2}$/.test(t.date)?t.date:displayToISO(t.date);
+      const dlCls = deadlineClass(t);
+      const rowCls = dlCls ? 'dl-'+dlCls : statusClass(t.sta);
+      let badgeHtml = '';
+      if (dlCls==='overdue')    badgeHtml = '<br><span class="dl-badge overdue">Overdue</span>';
+      else if (dlCls==='due-today') badgeHtml = '<br><span class="dl-badge due-today">Today</span>';
+      else if (dlCls==='due-soon')  badgeHtml = '<br><span class="dl-badge due-soon">Soon</span>';
+
+      return `<tr class="${rowCls}" id="row-${t.id}">
+        <td><input type="date" value="${esc(iso)}" onchange="update(${t.id},'date',this.value)">${badgeHtml}</td>
+        <td class="td-task"><textarea class="task-textarea" rows="1"
+          oninput="autoExpand(this);update(${t.id},'task',this.value)"
+          onchange="update(${t.id},'task',this.value)">${esc(t.task)}</textarea></td>
         <td><select onchange="update(${t.id},'cat',this.value)">${['Daily','Weekly','Monthly'].map(o=>`<option${t.cat===o?' selected':''}>${o}</option>`).join('')}</select></td>
         <td class="${priClass(t.pri)}"><select onchange="update(${t.id},'pri',this.value)">${['High','Medium','Low'].map(o=>`<option${t.pri===o?' selected':''}>${o}</option>`).join('')}</select></td>
         <td><select onchange="update(${t.id},'sta',this.value)">${['Not Started','In Progress','Completed','Waiting for Client'].map(o=>`<option${t.sta===o?' selected':''}>${o}</option>`).join('')}</select></td>
-        <td><input type="text" value="${esc(t.notes)}" onchange="update(${t.id},'notes',this.value)"></td>
-        <td><button class="del-btn" onclick="deleteTask(${t.id})" title="Delete">&times;</button></td>
+        <td><input type="text" value="${esc(t.notes)}" style="width:100%;font-family:var(--font-body);font-size:12px;border:none;background:transparent;color:inherit;outline:none;cursor:pointer;" onchange="update(${t.id},'notes',this.value)"></td>
+        <td><button class="del-btn" onclick="confirmDelete(${t.id})" title="Delete">&times;</button></td>
       </tr>`;
     }).join('');
+
+    // Auto-expand all task textareas after render
+    document.querySelectorAll('.task-textarea').forEach(el => autoExpand(el));
   }
+
   updateStats();
+  updateDeadlineBar();
 }
 
 function update(id, field, val) {
   const t = data.find(t=>t.id===id); if (!t) return;
   t[field] = val;
   const row = document.getElementById('row-'+id);
-  if (row) { row.className = statusClass(t.sta); if (field==='pri') row.cells[3].className=priClass(t.pri); }
-  updateStats(); saveData();
+  if (row) {
+    const dlCls = deadlineClass(t);
+    row.className = dlCls ? 'dl-'+dlCls : statusClass(t.sta);
+    if (field==='pri') row.cells[3].className = priClass(t.pri);
+    // update deadline badge in date cell
+    const dateCell = row.cells[0];
+    const existing = dateCell.querySelector('.dl-badge');
+    if (existing) existing.remove();
+    const br = dateCell.querySelector('br');
+    if (br) br.remove();
+    const newDl = deadlineClass(t);
+    if (newDl) {
+      const badge = document.createElement('span');
+      badge.className = 'dl-badge ' + newDl;
+      badge.textContent = newDl==='overdue'?'Overdue':newDl==='due-today'?'Today':'Soon';
+      dateCell.appendChild(document.createElement('br'));
+      dateCell.appendChild(badge);
+    }
+  }
+  updateStats();
+  updateDeadlineBar();
+  saveData();
 }
 
 function updateStats() {
@@ -625,9 +891,11 @@ function updateStats() {
   document.getElementById('stat-todo').textContent  = data.filter(t=>t.sta==='Not Started').length;
 }
 
-function deleteTask(id) {
-  if (!confirm('Delete this task?')) return;
-  data = data.filter(t=>t.id!==id); saveData(); render(); showToast('Task deleted');
+function confirmDelete(id) {
+  openModal('Delete Task', 'Delete this task permanently? This cannot be undone.', 'Delete', () => {
+    data = data.filter(t=>t.id!==id);
+    saveData(); render(); showToast('Task deleted');
+  });
 }
 
 function sortBy(col) {
@@ -639,7 +907,8 @@ function sortBy(col) {
 }
 
 function clearFilters() {
-  ['search','filter-cat','filter-pri','filter-sta'].forEach(id => document.getElementById(id).value='');
+  ['search','filter-date','filter-cat','filter-pri','filter-sta'].forEach(id=>document.getElementById(id).value='');
+  dlFilter = '';
   render();
 }
 
@@ -656,9 +925,9 @@ function addTask() {
     id: nextId++,
     date: document.getElementById('f-date').value || todayISO,
     task,
-    cat: document.getElementById('f-cat').value,
-    pri: document.getElementById('f-pri').value,
-    sta: document.getElementById('f-sta').value,
+    cat:   document.getElementById('f-cat').value,
+    pri:   document.getElementById('f-pri').value,
+    sta:   document.getElementById('f-sta').value,
     notes: document.getElementById('f-notes').value.trim()
   });
   document.getElementById('f-task').value='';
