@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym VA Task Tracker — Geramel Tapis</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:    #0A0A0A;
+  --dark1:    #111111;
+  --dark2:    #1A1A1A;
+  --dark3:    #242424;
+  --dark4:    #2E2E2E;
+  --border:   #333333;
+  --border2:  #3F3F3F;
+  --orange:   #FF6B1A;
+  --orange2:  #E55A0A;
+  --white:    #F5F5F5;
+  --muted:    #888888;
+  --muted2:   #AAAAAA;
+
+  --green-bg:     #0F2A0A;
+  --green-border: #3D7A1A;
+  --green-text:   #7EC850;
+  --amber-bg:     #2A1A00;
+  --amber-border: #A06010;
+  --amber-text:   #FFAA33;
+  --red-bg:       #2A0A0A;
+  --red-border:   #882020;
+  --red-text:     #FF6B6B;
+  --blue-bg:      #051828;
+  --blue-border:  #1A5080;
+  --blue-text:    #5BB8FF;
+
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body:    'Barlow', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--black);
+  min-height: 100vh;
+  color: var(--white);
+  padding: 20px 16px 60px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tracker { max-width: 1160px; margin: 0 auto; position: relative; z-index: 1; }
+
+/* ── Header ── */
+.header-bar {
+  background: var(--dark2);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--orange);
+  border-radius: 4px 4px 8px 8px;
+  padding: 20px 28px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+.header-bar::after {
+  content: '🏋️';
+  position: absolute;
+  right: 20px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 110px;
+  opacity: 0.05;
+  pointer-events: none;
+  filter: grayscale(1);
+}
+.header-eyebrow {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 4px;
+}
+.header-title {
+  font-family: var(--font-display);
+  font-size: 30px; font-weight: 800;
+  letter-spacing: -0.5px; text-transform: uppercase;
+  color: var(--white); line-height: 1;
+}
+.header-title span { color: var(--orange); }
+.header-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.save-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--green-text);
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: 4px; padding: 6px 14px;
+  transition: opacity 0.4s;
+}
+.save-badge.hidden { opacity: 0; }
+.save-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%; background: var(--green-text);
+  animation: blink 1.8s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Stats ── */
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+.stat {
+  background: var(--dark2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 14px 18px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.stat:hover { border-color: var(--border2); }
+.stat-accent {
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  border-radius: 6px 0 0 6px;
+}
+.stat-label {
+  font-family: var(--font-display); font-size: 10px; font-weight: 600;
+  color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+}
+.stat-num {
+  font-family: var(--font-display); font-size: 36px; font-weight: 800;
+  line-height: 1; letter-spacing: -1px;
+}
+
+/* ── Legend ── */
+.legend {
+  display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px;
+  align-items: center; padding: 10px 16px;
+  background: var(--dark2); border: 1px solid var(--border); border-radius: 6px;
+}
+.leg-item {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--muted2);
+}
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ── Controls ── */
+.controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+.controls select,
+.controls input[type=text] {
+  font-family: var(--font-body); font-size: 13px;
+  height: 36px; padding: 0 12px; border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--dark2); color: var(--white); outline: none;
+  transition: border-color 0.15s;
+}
+.controls select option { background: var(--dark3); }
+.controls input[type=text] { flex: 1; min-width: 150px; }
+.controls select:focus, .controls input:focus { border-color: var(--orange); }
+
+.btn-add {
+  height: 36px; padding: 0 18px; border-radius: 4px; border: none;
+  background: var(--orange); color: var(--black);
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-add:hover { background: var(--orange2); }
+.btn-add:active { transform: scale(0.97); }
+
+.btn-clear {
+  height: 36px; padding: 0 14px; border-radius: 4px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted);
+  font-family: var(--font-body); font-size: 13px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-clear:hover { background: var(--dark3); color: var(--white); }
+
+.btn-reset {
+  height: 36px; padding: 0 14px; border-radius: 4px;
+  border: 1px solid var(--red-border); background: transparent; color: var(--red-text);
+  font-family: var(--font-body); font-size: 13px; cursor: pointer; margin-left: auto;
+  transition: background 0.15s;
+}
+.btn-reset:hover { background: var(--red-bg); }
+
+/* ── Add Form ── */
+.add-form {
+  background: var(--dark2); border: 1px solid var(--border);
+  border-left: 3px solid var(--orange); border-radius: 6px;
+  padding: 18px 20px; margin-bottom: 12px;
+  display: none; animation: slideDown 0.18s ease;
+}
+.add-form.open { display: block; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+
+.form-section-title {
+  font-family: var(--font-display); font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 12px;
+}
+.add-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.add-row-wide { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.form-group label {
+  display: block; font-family: var(--font-display); font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; font-family: var(--font-body); font-size: 13px;
+  padding: 8px 11px; border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--dark3); color: var(--white); outline: none;
+  transition: border-color 0.15s;
+}
+.form-group select option { background: var(--dark3); }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--orange); }
+.form-group textarea { resize: none; height: 60px; }
+.form-group input[type=date] { cursor: pointer; color-scheme: dark; }
+
+.form-btns { display: flex; gap: 8px; }
+.btn-save {
+  height: 36px; padding: 0 20px; border-radius: 4px;
+  background: var(--orange); color: var(--black); border: none;
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-save:hover { background: var(--orange2); }
+.btn-cancel {
+  height: 36px; padding: 0 14px; border-radius: 4px;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); font-family: var(--font-body); font-size: 13px;
+  cursor: pointer; transition: background 0.15s;
+}
+.btn-cancel:hover { background: var(--dark3); }
+
+/* ── Table ── */
+.table-wrap {
+  overflow-x: auto; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--dark2);
+}
+table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+col.c-date  { width: 112px; }
+col.c-task  { width: 230px; }
+col.c-cat   { width: 80px; }
+col.c-pri   { width: 80px; }
+col.c-sta   { width: 150px; }
+col.c-notes { width: 190px; }
+col.c-del   { width: 38px; }
+
+thead th {
+  background: var(--dark3); color: var(--muted2);
+  padding: 10px 12px; text-align: left;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; user-select: none; white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.15s;
+}
+thead th:hover { color: var(--orange); }
+thead th.sorted { color: var(--orange); }
+.sort-arrow { margin-left: 4px; opacity: 0.4; font-size: 9px; }
+thead th.sorted .sort-arrow { opacity: 1; }
+
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: filter 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { filter: brightness(1.1); }
+tbody td { padding: 8px 12px; vertical-align: middle; font-size: 12px; }
+
+tbody td input[type=text],
+tbody td input[type=date],
+tbody td select {
+  width: 100%; font-family: var(--font-body); font-size: 12px;
+  border: none; background: transparent; color: inherit; outline: none; cursor: pointer;
+}
+tbody td input[type=date] { color-scheme: dark; }
+tbody td input[type=text]:focus {
+  text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px;
+}
+
+.del-btn {
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  font-size: 16px; padding: 2px 5px; border-radius: 3px;
+  display: block; width: 100%; text-align: center;
+  transition: color 0.15s, background 0.15s;
+}
+.del-btn:hover { color: var(--red-text); background: var(--red-bg); }
+
+/* ── Row colours (dark versions) ── */
+tr.s-completed  { background: var(--green-bg) !important; }
+tr.s-completed  td { color: var(--green-text); }
+tr.s-inprogress { background: var(--amber-bg) !important; }
+tr.s-inprogress td { color: var(--amber-text); }
+tr.s-notstarted { background: var(--red-bg) !important; }
+tr.s-notstarted td { color: var(--red-text); }
+tr.s-waiting    { background: var(--blue-bg) !important; }
+tr.s-waiting    td { color: var(--blue-text); }
+
+tr.s-completed  td input, tr.s-completed  td select { color: var(--green-text); }
+tr.s-inprogress td input, tr.s-inprogress td select { color: var(--amber-text); }
+tr.s-notstarted td input, tr.s-notstarted td select { color: var(--red-text); }
+tr.s-waiting    td input, tr.s-waiting    td select { color: var(--blue-text); }
+
+.pri-high { font-weight: 700; color: var(--red-text); }
+.pri-med  { font-weight: 700; color: var(--amber-text); }
+.pri-low  { font-weight: 700; color: var(--green-text); }
+
+.empty-row td { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; font-style: italic; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 28px; right: 28px;
+  background: var(--dark3); border: 1px solid var(--orange); border-left: 3px solid var(--orange);
+  color: var(--white); font-family: var(--font-display);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+  padding: 11px 18px; border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  transform: translateY(12px); opacity: 0; transition: all 0.25s;
+  pointer-events: none; z-index: 999;
+}
+.toast.show { transform: none; opacity: 1; }
+
+@media (max-width: 640px) {
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+  .add-row, .add-row-wide { grid-template-columns: 1fr; }
+  .header-title { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div class="tracker">
+
+  <div class="header-bar">
+    <div class="header-left">
+      <div class="header-eyebrow">Australian Gym VA</div>
+      <div class="header-title">Task Tracker &mdash; <span id="main-date">…</span></div>
+      <div class="header-sub">Geramel Tapis &nbsp;·&nbsp; Super Sidekick &nbsp;·&nbsp; <span id="day-label"></span></div>
+    </div>
+    <div class="save-badge hidden" id="save-badge">
+      <div class="save-dot"></div> Saved
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-accent" style="background:var(--orange)"></div>
+      <div class="stat-label">Total tasks</div>
+      <div class="stat-num" id="stat-total" style="color:var(--orange)">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-accent" style="background:var(--green-text)"></div>
+      <div class="stat-label">Completed</div>
+      <div class="stat-num" id="stat-done" style="color:var(--green-text)">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-accent" style="background:var(--amber-text)"></div>
+      <div class="stat-label">In Progress</div>
+      <div class="stat-num" id="stat-prog" style="color:var(--amber-text)">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-accent" style="background:var(--red-text)"></div>
+      <div class="stat-label">Not Started</div>
+      <div class="stat-num" id="stat-todo" style="color:var(--red-text)">0</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:var(--green-text)"></div>Completed</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--amber-text)"></div>In Progress</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--red-text)"></div>Not Started</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--blue-text)"></div>Waiting for Client</div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="🔍  Search tasks…" oninput="render()">
+    <select id="filter-cat" onchange="render()">
+      <option value="">All categories</option>
+      <option value="Daily">Daily</option>
+      <option value="Weekly">Weekly</option>
+      <option value="Monthly">Monthly</option>
+    </select>
+    <select id="filter-pri" onchange="render()">
+      <option value="">All priorities</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+    <select id="filter-sta" onchange="render()">
+      <option value="">All statuses</option>
+      <option value="Not Started">Not started</option>
+      <option value="In Progress">In progress</option>
+      <option value="Completed">Completed</option>
+      <option value="Waiting for Client">Waiting for client</option>
+    </select>
+    <button class="btn-clear" onclick="clearFilters()">Clear</button>
+    <button class="btn-add" onclick="toggleAddForm()">+ Add Task</button>
+    <button class="btn-reset" onclick="resetData()">↺ Reset</button>
+  </div>
+
+  <div class="add-form" id="add-form">
+    <div class="form-section-title">⚡ New Task</div>
+    <div class="add-row">
+      <div class="form-group"><label>Task description</label><input type="text" id="f-task" placeholder="What needs to be done?"></div>
+      <div class="form-group"><label>Category</label>
+        <select id="f-cat"><option>Daily</option><option>Weekly</option><option>Monthly</option></select>
+      </div>
+      <div class="form-group"><label>Priority</label>
+        <select id="f-pri"><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+    </div>
+    <div class="add-row-wide">
+      <div class="form-group"><label>Date</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="f-sta"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Waiting for Client</option></select>
+      </div>
+      <div class="form-group"><label>Notes / Next steps</label>
+        <textarea id="f-notes" placeholder="Add context, blockers or next actions…"></textarea>
+      </div>
+    </div>
+    <div class="form-btns">
+      <button class="btn-save" onclick="addTask()">Save Task</button>
+      <button class="btn-cancel" onclick="toggleAddForm()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col class="c-date"><col class="c-task"><col class="c-cat">
+        <col class="c-pri"><col class="c-sta"><col class="c-notes"><col class="c-del">
+      </colgroup>
+      <thead>
+        <tr>
+          <th onclick="sortBy('date')">Date <span class="sort-arrow" id="arr-date">↕</span></th>
+          <th onclick="sortBy('task')">Task description <span class="sort-arrow" id="arr-task">↕</span></th>
+          <th onclick="sortBy('cat')">Category <span class="sort-arrow" id="arr-cat">↕</span></th>
+          <th onclick="sortBy('pri')">Priority <span class="sort-arrow" id="arr-pri">↕</span></th>
+          <th onclick="sortBy('sta')">Status <span class="sort-arrow" id="arr-sta">↕</span></th>
+          <th>Notes / Next steps</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Dynamic date — always reflects the real current day ──
+const today = new Date();
+const todayISO = today.toISOString().split('T')[0];
+const todayDisplay = today.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+document.getElementById('main-date').textContent = todayDisplay;
+document.getElementById('day-label').textContent = DAYS[today.getDay()];
+document.getElementById('f-date').value = todayISO;
+
+function displayToISO(s) {
+  if (!s) return todayISO;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  return isNaN(d) ? todayISO : d.toISOString().split('T')[0];
+}
+
+// ── Defaults ──
+const DEFAULT_TASKS = [
+  { id:1,  date:todayISO, task:'Check member inbox — respond to all enquiries within 2 hours', cat:'Daily', pri:'High', sta:'Not Started', notes:'Check email, Facebook DMs, booking system messages' },
+  { id:2,  date:todayISO, task:'Review Red Flag & Orange Flag report', cat:'Daily', pri:'High', sta:'Not Started', notes:'Flag members at risk — notify owner of urgent cases' },
+  { id:3,  date:todayISO, task:'Follow up on failed direct debit payments', cat:'Daily', pri:'High', sta:'Not Started', notes:'Contact members with failed DD — offer payment resolution' },
+  { id:4,  date:todayISO, task:'Lead follow-up — new enquiries from Meta Ads', cat:'Daily', pri:'High', sta:'Not Started', notes:'Use Sell-by-Chat framework — book trial within 24hrs' },
+  { id:5,  date:todayISO, task:'Update CRM — log all lead interactions and status changes', cat:'Daily', pri:'High', sta:'Not Started', notes:'Ensure pipeline is clean and up to date' },
+  { id:6,  date:todayISO, task:'Check attendance list and flag MIA members', cat:'Daily', pri:'Medium', sta:'Not Started', notes:'Members absent 7+ days — add to outreach list' },
+  { id:7,  date:todayISO, task:'Review and respond to Google & Facebook reviews', cat:'Daily', pri:'Medium', sta:'Not Started', notes:'Respond within 24 hours — positive and negative' },
+  { id:8,  date:todayISO, task:'Schedule and publish daily social media post', cat:'Daily', pri:'Medium', sta:'Not Started', notes:'Use approved content calendar — check caption & hashtags' },
+  { id:9,  date:todayISO, task:'Daily Meta Ads review — check spend, leads, cost per lead', cat:'Daily', pri:'Medium', sta:'Not Started', notes:'Flag if CPL is above target — note in ad tracker' },
+  { id:10, date:todayISO, task:'Send end-of-day summary to gym owner', cat:'Daily', pri:'Low', sta:'Not Started', notes:'Bullet-point update — leads, issues, actions taken' },
+  { id:11, date:todayISO, task:'Send Weekly Newsletter to all members', cat:'Weekly', pri:'High', sta:'Not Started', notes:'Use Mailchimp — include class updates, promos, member spotlight' },
+  { id:12, date:todayISO, task:'Weekly attendance analysis — identify trends', cat:'Weekly', pri:'High', sta:'Not Started', notes:'Compare week vs prior week — flag drops to owner' },
+  { id:13, date:todayISO, task:'Fringe Outreach — contact at-risk members', cat:'Weekly', pri:'High', sta:'Not Started', notes:'Call or message members flagged in Red Flag report' },
+  { id:14, date:todayISO, task:'Lead pipeline review — update all lead statuses in CRM', cat:'Weekly', pri:'High', sta:'Not Started', notes:'Archive dead leads — push warm leads to next stage' },
+  { id:15, date:todayISO, task:'Weekly sales report — leads, trials booked, conversions', cat:'Weekly', pri:'High', sta:'Not Started', notes:'Send summary to owner by Friday 5PM AEST' },
+  { id:16, date:todayISO, task:'Content calendar planning for next week', cat:'Weekly', pri:'Medium', sta:'Not Started', notes:'Plan 5–7 posts — align with promos or events' },
+  { id:17, date:todayISO, task:'Review and optimise Meta Ads — weekly performance', cat:'Weekly', pri:'Medium', sta:'Not Started', notes:'Check CPL, ROAS, reach — adjust budget if needed' },
+  { id:18, date:todayISO, task:'Follow up on trial members — check conversion status', cat:'Weekly', pri:'Medium', sta:'Not Started', notes:'Send follow-up to trial members not yet converted' },
+  { id:19, date:todayISO, task:'Social media engagement review', cat:'Weekly', pri:'Medium', sta:'Not Started', notes:'Clear all unanswered DMs — reply to all comments' },
+  { id:20, date:todayISO, task:'Prepare weekly owner update summary', cat:'Weekly', pri:'Low', sta:'Not Started', notes:'Key metrics: leads, attendance, revenue, issues, wins' },
+  { id:21, date:todayISO, task:'Monthly P&L summary — review with owner', cat:'Monthly', pri:'High', sta:'Not Started', notes:'Pull from Xero — highlight revenue, expenses, net profit/loss' },
+  { id:22, date:todayISO, task:'BAS preparation support — reconcile GST for the quarter', cat:'Monthly', pri:'High', sta:'Not Started', notes:'Ensure all transactions coded correctly — send to accountant' },
+  { id:23, date:todayISO, task:'Payroll review — confirm all pays processed correctly', cat:'Monthly', pri:'High', sta:'Not Started', notes:'Check wages, PAYG withholding, super in Xero' },
+  { id:24, date:todayISO, task:'Monthly member retention report', cat:'Monthly', pri:'High', sta:'Not Started', notes:'Track cancellations, freezes, new joins — calculate churn' },
+  { id:25, date:todayISO, task:'Monthly marketing performance report', cat:'Monthly', pri:'High', sta:'Not Started', notes:'Meta Ads: spend, leads, CPL, conversions — month vs month' },
+  { id:26, date:todayISO, task:'Reconcile all bank accounts in Xero', cat:'Monthly', pri:'High', sta:'Not Started', notes:'Trading, Online Saver, Credit Card — all must balance' },
+  { id:27, date:todayISO, task:'Aged receivables review — follow up overdue invoices', cat:'Monthly', pri:'Medium', sta:'Not Started', notes:'Flag 30+ day overdue accounts — notify owner' },
+  { id:28, date:todayISO, task:"Content audit — review last month's social performance", cat:'Monthly', pri:'Medium', sta:'Not Started', notes:'Top posts, engagement rate, follower growth' },
+  { id:29, date:todayISO, task:'Depreciation run in Xero — post monthly journal', cat:'Monthly', pri:'Low', sta:'Not Started', notes:'Run fixed asset depreciation — confirm in General Ledger' },
+  { id:30, date:todayISO, task:'Check upcoming public holidays (state-specific)', cat:'Monthly', pri:'Low', sta:'Not Started', notes:'Adjust comms schedule and follow-up calendar accordingly' },
+];
+
+// ── Storage ──
+const STORAGE_KEY = 'gymva_tasks_v3';
+const NEXT_ID_KEY = 'gymva_nextid_v3';
+
+function loadData() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return DEFAULT_TASKS.map(t => ({...t}));
+}
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(NEXT_ID_KEY, nextId);
+  showSaveBadge();
+}
+function resetData() {
+  if (!confirm('Reset all tasks back to defaults? This will delete any changes and added tasks.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(NEXT_ID_KEY);
+  data = DEFAULT_TASKS.map(t => ({...t}));
+  nextId = 31;
+  render();
+  showToast('Tasks reset to defaults');
+}
+
+// ── State ──
+let data = loadData();
+let nextId = parseInt(localStorage.getItem(NEXT_ID_KEY) || '31');
+let sortCol = 'cat', sortDir = 1;
+const PRI_ORDER = { High:0, Medium:1, Low:2 };
+const STA_ORDER = { 'Not Started':0, 'In Progress':1, 'Completed':2, 'Waiting for Client':3 };
+
+// ── UI helpers ──
+let saveBadgeTimer;
+function showSaveBadge() {
+  const el = document.getElementById('save-badge');
+  el.classList.remove('hidden');
+  clearTimeout(saveBadgeTimer);
+  saveBadgeTimer = setTimeout(() => el.classList.add('hidden'), 2500);
+}
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function statusClass(s) {
+  return s==='Completed'?'s-completed':s==='In Progress'?'s-inprogress':s==='Not Started'?'s-notstarted':s==='Waiting for Client'?'s-waiting':'';
+}
+function priClass(p) { return p==='High'?'pri-high':p==='Medium'?'pri-med':'pri-low'; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function render() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const fcat = document.getElementById('filter-cat').value;
+  const fpri = document.getElementById('filter-pri').value;
+  const fsta = document.getElementById('filter-sta').value;
+
+  let rows = data.filter(t => {
+    if (fcat && t.cat!==fcat) return false;
+    if (fpri && t.pri!==fpri) return false;
+    if (fsta && t.sta!==fsta) return false;
+    if (search && !t.task.toLowerCase().includes(search) && !(t.notes||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  rows.sort((a,b) => {
+    let av,bv;
+    if (sortCol==='pri'){av=PRI_ORDER[a.pri]??9;bv=PRI_ORDER[b.pri]??9;}
+    else if (sortCol==='sta'){av=STA_ORDER[a.sta]??9;bv=STA_ORDER[b.sta]??9;}
+    else{av=(a[sortCol]||'').toString().toLowerCase();bv=(b[sortCol]||'').toString().toLowerCase();}
+    return av<bv?-sortDir:av>bv?sortDir:0;
+  });
+
+  const tbody = document.getElementById('tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No tasks match your filters.</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(t => {
+      const iso = /^\d{4}-\d{2}-\d{2}$/.test(t.date) ? t.date : displayToISO(t.date);
+      return `<tr class="${statusClass(t.sta)}" id="row-${t.id}">
+        <td><input type="date" value="${esc(iso)}" onchange="update(${t.id},'date',this.value)"></td>
+        <td><input type="text" value="${esc(t.task)}" onchange="update(${t.id},'task',this.value)"></td>
+        <td><select onchange="update(${t.id},'cat',this.value)">${['Daily','Weekly','Monthly'].map(o=>`<option${t.cat===o?' selected':''}>${o}</option>`).join('')}</select></td>
+        <td class="${priClass(t.pri)}"><select onchange="update(${t.id},'pri',this.value)">${['High','Medium','Low'].map(o=>`<option${t.pri===o?' selected':''}>${o}</option>`).join('')}</select></td>
+        <td><select onchange="update(${t.id},'sta',this.value)">${['Not Started','In Progress','Completed','Waiting for Client'].map(o=>`<option${t.sta===o?' selected':''}>${o}</option>`).join('')}</select></td>
+        <td><input type="text" value="${esc(t.notes)}" onchange="update(${t.id},'notes',this.value)"></td>
+        <td><button class="del-btn" onclick="deleteTask(${t.id})" title="Delete">&times;</button></td>
+      </tr>`;
+    }).join('');
+  }
+  updateStats();
+}
+
+function update(id, field, val) {
+  const t = data.find(t=>t.id===id); if (!t) return;
+  t[field] = val;
+  const row = document.getElementById('row-'+id);
+  if (row) { row.className = statusClass(t.sta); if (field==='pri') row.cells[3].className=priClass(t.pri); }
+  updateStats(); saveData();
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = data.length;
+  document.getElementById('stat-done').textContent  = data.filter(t=>t.sta==='Completed').length;
+  document.getElementById('stat-prog').textContent  = data.filter(t=>t.sta==='In Progress').length;
+  document.getElementById('stat-todo').textContent  = data.filter(t=>t.sta==='Not Started').length;
+}
+
+function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  data = data.filter(t=>t.id!==id); saveData(); render(); showToast('Task deleted');
+}
+
+function sortBy(col) {
+  if (sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=1; }
+  document.querySelectorAll('.sort-arrow').forEach(el => { el.textContent='↕'; el.parentElement.classList.remove('sorted'); });
+  const arr = document.getElementById('arr-'+col);
+  if (arr) { arr.textContent=sortDir===1?'↑':'↓'; arr.parentElement.classList.add('sorted'); }
+  render();
+}
+
+function clearFilters() {
+  ['search','filter-cat','filter-pri','filter-sta'].forEach(id => document.getElementById(id).value='');
+  render();
+}
+
+function toggleAddForm() {
+  const f = document.getElementById('add-form');
+  f.classList.toggle('open');
+  if (f.classList.contains('open')) { document.getElementById('f-task').focus(); document.getElementById('f-date').value=todayISO; }
+}
+
+function addTask() {
+  const task = document.getElementById('f-task').value.trim();
+  if (!task) { document.getElementById('f-task').focus(); return; }
+  data.push({
+    id: nextId++,
+    date: document.getElementById('f-date').value || todayISO,
+    task,
+    cat: document.getElementById('f-cat').value,
+    pri: document.getElementById('f-pri').value,
+    sta: document.getElementById('f-sta').value,
+    notes: document.getElementById('f-notes').value.trim()
+  });
+  document.getElementById('f-task').value='';
+  document.getElementById('f-notes').value='';
+  document.getElementById('f-sta').value='Not Started';
+  document.getElementById('f-date').value=todayISO;
+  document.getElementById('add-form').classList.remove('open');
+  saveData(); render(); showToast('Task saved ✓');
+}
+
+render();
+</script>
+</body>
+</html>
