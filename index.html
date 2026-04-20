@@ -205,8 +205,22 @@ tr.dl-soon{background:var(--soon-bg)!important;border-left:3px solid var(--soon-
 .toast{position:fixed;bottom:26px;right:26px;background:var(--dark3);border:1px solid var(--orange);border-left:3px solid var(--orange);color:var(--white);font-family:var(--font-d);font-size:13px;font-weight:600;letter-spacing:.5px;padding:10px 16px;border-radius:4px;box-shadow:0 8px 32px rgba(0,0,0,.6);transform:translateY(12px);opacity:0;transition:all .25s;pointer-events:none;z-index:999}
 .toast.show{transform:none;opacity:1}
 
+/* ── CLOCKS ── */
+.clocks{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.clock-card{background:rgba(0,0,0,.35);border:1px solid var(--border2);border-radius:6px;padding:6px 13px;text-align:center;min-width:110px}
+.clock-flag{font-size:14px;line-height:1;margin-bottom:1px}
+.clock-label{font-family:var(--font-d);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.clock-time{font-family:var(--font-d);font-size:20px;font-weight:800;letter-spacing:1px;color:var(--white);line-height:1}
+.clock-date{font-family:var(--font-d);font-size:9px;color:var(--muted);letter-spacing:.5px;margin-top:1px}
+
+/* ── COMPLETED CHIP ── */
+.dl-chip.completed{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border)}
+
+/* ── TASK EXPORT BAR ── */
+.task-export-bar{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+
 @media(max-width:900px){.report-layout{grid-template-columns:1fr}}
-@media(max-width:640px){.stats-row{grid-template-columns:repeat(2,1fr)}.fg-row.cols3,.fg-row.cols4{grid-template-columns:1fr}.hdr-title{font-size:22px}.tabs{overflow-x:auto}}
+@media(max-width:640px){.stats-row{grid-template-columns:repeat(2,1fr)}.fg-row.cols3,.fg-row.cols4{grid-template-columns:1fr}.hdr-title{font-size:22px}.tabs{overflow-x:auto}.clocks{gap:7px}.clock-card{min-width:90px}.clock-time{font-size:16px}}
 </style>
 </head>
 <body>
@@ -219,7 +233,23 @@ tr.dl-soon{background:var(--soon-bg)!important;border-left:3px solid var(--soon-
     <div class="hdr-title">Task Tracker — <span id="main-date">…</span></div>
     <div class="hdr-sub">Geramel Tapis &nbsp;·&nbsp; Super Sidekick &nbsp;·&nbsp; <span id="day-label"></span></div>
   </div>
-  <div class="save-badge hidden" id="save-badge"><div class="save-dot"></div> Saved</div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+    <div class="save-badge hidden" id="save-badge"><div class="save-dot"></div> Saved</div>
+    <div class="clocks">
+      <div class="clock-card">
+        <div class="clock-flag">🇵🇭</div>
+        <div class="clock-label">Philippine Time</div>
+        <div class="clock-time" id="clock-ph">--:--:--</div>
+        <div class="clock-date" id="date-ph"></div>
+      </div>
+      <div class="clock-card">
+        <div class="clock-flag">🇦🇺</div>
+        <div class="clock-label">Australian AEST</div>
+        <div class="clock-time" id="clock-au">--:--:--</div>
+        <div class="clock-date" id="date-au"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- TABS -->
@@ -249,6 +279,13 @@ tr.dl-soon{background:var(--soon-bg)!important;border-left:3px solid var(--soon-
     <div class="leg-item"><div class="leg-dot" style="background:var(--overdue-text)"></div>Overdue</div>
     <div class="leg-item"><div class="leg-dot" style="background:var(--today-text)"></div>Due Today</div>
     <div class="leg-item"><div class="leg-dot" style="background:var(--soon-text)"></div>Due Soon</div>
+  </div>
+
+  <div class="task-export-bar">
+    <span class="flabel">Export Tasks:</span>
+    <button class="btn btn-ghost" onclick="exportTasks('csv')">⬇ CSV</button>
+    <button class="btn btn-ghost" onclick="exportTasks('txt')">⬇ TXT</button>
+    <button class="btn btn-ghost" onclick="exportTasks('html')">⬇ HTML</button>
   </div>
 
   <div class="controls">
@@ -651,6 +688,8 @@ function updateDeadlineBar(){
   const ov=tasks.filter(t=>dlClass(t)==='overdue').length;
   const td=tasks.filter(t=>dlClass(t)==='due-today').length;
   const so=tasks.filter(t=>dlClass(t)==='due-soon').length;
+  const fdate=document.getElementById('filter-date').value;
+  const comp=(fdate?tasks.filter(t=>t.date===fdate):tasks).filter(t=>t.sta==='Completed').length;
   const bar=document.getElementById('deadline-bar');bar.innerHTML='';
   function chip(lbl,cls,count){
     if(!count)return;
@@ -660,6 +699,7 @@ function updateDeadlineBar(){
     el.onclick=()=>{dlFilter=dlFilter===cls?'':cls;renderTasks();};
     bar.appendChild(el);
   }
+  chip('✅ Completed','completed',comp);
   chip('⚠ Overdue','overdue',ov);
   chip('⏰ Due Today','due-today',td);
   chip('🔜 Due Soon','due-soon',so);
@@ -677,7 +717,8 @@ function renderTasks(){
     if(fcat&&t.cat!==fcat)return false;
     if(fpri&&t.pri!==fpri)return false;
     if(fsta&&t.sta!==fsta)return false;
-    if(dlFilter&&dlClass(t)!==dlFilter)return false;
+    if(dlFilter==='completed'&&t.sta!=='Completed')return false;
+    if(dlFilter&&dlFilter!=='completed'&&dlClass(t)!==dlFilter)return false;
     if(search&&!t.task.toLowerCase().includes(search)&&!(t.notes||'').toLowerCase().includes(search))return false;
     return true;
   });
@@ -709,11 +750,11 @@ function renderTasks(){
     const recurIcon=t.recur?`<span title="Recurring: ${t.recur}" class="rec-icon">🔁</span>`:'';
     return`<tr class="${rowCls}" id="row-${t.id}">
       <td><input type="date" value="${esc(t.date)}" onchange="inlineUpdate(${t.id},'date',this.value)">${badge}</td>
-      <td class="td-task"><textarea class="task-ta" rows="1" oninput="autoExpand(this);inlineUpdate(${t.id},'task',this.value)">${esc(t.task)}</textarea></td>
+      <td class="td-task"><textarea class="task-ta" rows="1" oninput="autoExpand(this);inlineUpdate(${t.id},'task',this.value)" onchange="inlineUpdate(${t.id},'task',this.value)">${esc(t.task)}</textarea></td>
       <td><select onchange="inlineUpdate(${t.id},'cat',this.value)">${['Daily','Weekly','Monthly'].map(o=>`<option${t.cat===o?' selected':''}>${o}</option>`).join('')}</select></td>
       <td class="${priClass(t.pri)}"><select onchange="inlineUpdate(${t.id},'pri',this.value)">${['High','Medium','Low'].map(o=>`<option${t.pri===o?' selected':''}>${o}</option>`).join('')}</select></td>
       <td><select onchange="inlineUpdate(${t.id},'sta',this.value)">${['Not Started','In Progress','Completed','Waiting for Client'].map(o=>`<option${t.sta===o?' selected':''}>${o}</option>`).join('')}</select></td>
-      <td><textarea class="notes-ta" rows="1" oninput="autoExpand(this);inlineUpdate(${t.id},'notes',this.value)">${esc(t.notes||'')}</textarea></td>
+      <td><textarea class="notes-ta" rows="1" oninput="autoExpand(this);inlineUpdate(${t.id},'notes',this.value)" onchange="inlineUpdate(${t.id},'notes',this.value)">${esc(t.notes||'')}</textarea></td>
       <td style="text-align:center">${recurIcon}</td>
       <td><div class="action-btns">
         <button class="icon-btn edit" onclick="openEditForm(${t.id})" title="Edit">✏️</button>
@@ -723,6 +764,8 @@ function renderTasks(){
   }).join('');
 
   document.querySelectorAll('.task-ta,.notes-ta').forEach(el=>autoExpand(el));
+  // second pass for elements that weren't fully painted yet
+  requestAnimationFrame(()=>document.querySelectorAll('.task-ta,.notes-ta').forEach(el=>autoExpand(el)));
   updateDeadlineBar();
 }
 
@@ -748,7 +791,11 @@ function sortBy(col){
 }
 
 function clearTaskFilters(){
-  ['search','filter-date','filter-cat','filter-pri','filter-sta'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('search').value='';
+  document.getElementById('filter-date').value=todayISO;
+  document.getElementById('filter-cat').value='';
+  document.getElementById('filter-pri').value='';
+  document.getElementById('filter-sta').value='';
   dlFilter='';renderTasks();
 }
 
@@ -898,8 +945,88 @@ ${list.map(r=>`<div class="entry"><span class="tag ${r.type.toLowerCase()}">${r.
 }
 
 // ══════════════════════════════════════════════════════
+// CLOCKS — Philippine Time (UTC+8) & Australian AEST (UTC+10)
+// ══════════════════════════════════════════════════════
+function updateClocks(){
+  const now=new Date();
+  function fmt(offset){
+    const utc=now.getTime()+now.getTimezoneOffset()*60000;
+    const local=new Date(utc+3600000*offset);
+    const hh=String(local.getHours()).padStart(2,'0');
+    const mm=String(local.getMinutes()).padStart(2,'0');
+    const ss=String(local.getSeconds()).padStart(2,'0');
+    const ampm=local.getHours()<12?'AM':'PM';
+    const h12=local.getHours()%12||12;
+    const time=`${String(h12).padStart(2,'0')}:${mm}:${ss} ${ampm}`;
+    const date=local.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
+    return{time,date};
+  }
+  const ph=fmt(8),au=fmt(10);
+  document.getElementById('clock-ph').textContent=ph.time;
+  document.getElementById('date-ph').textContent=ph.date;
+  document.getElementById('clock-au').textContent=au.time;
+  document.getElementById('date-au').textContent=au.date;
+}
+updateClocks();
+setInterval(updateClocks,1000);
+
+// ══════════════════════════════════════════════════════
+// TASK EXPORT
+// ══════════════════════════════════════════════════════
+function exportTasks(fmt){
+  const fdate=document.getElementById('filter-date').value;
+  const fcat=document.getElementById('filter-cat').value;
+  const fpri=document.getElementById('filter-pri').value;
+  const fsta=document.getElementById('filter-sta').value;
+  let list=tasks.filter(t=>{
+    if(fdate&&t.date!==fdate)return false;
+    if(fcat&&t.cat!==fcat)return false;
+    if(fpri&&t.pri!==fpri)return false;
+    if(fsta&&t.sta!==fsta)return false;
+    return true;
+  });
+  if(!list.length){showToast('No tasks to export with current filters.');return;}
+  let content='',filename='',mime='';
+  const stamp=fdate||todayISO;
+  if(fmt==='csv'){
+    const rows=[['Date','Task','Category','Priority','Status','Notes','Recurring']];
+    list.forEach(t=>rows.push([t.date,'"'+(t.task||'').replace(/"/g,'""')+'"',t.cat,t.pri,t.sta,'"'+(t.notes||'').replace(/"/g,'""')+'"',t.recur||'']));
+    content=rows.map(r=>r.join(',')).join('\n');
+    filename=`gym_va_tasks_${stamp}.csv`;mime='text/csv';
+  } else if(fmt==='txt'){
+    content=`GYM VA TASK TRACKER — Geramel Tapis\n${'='.repeat(50)}\nExported: ${new Date().toLocaleString('en-AU')}\nFilter: ${fdate?'Date: '+fdate:'All dates'} | ${fcat||'All categories'} | ${fpri||'All priorities'} | ${fsta||'All statuses'}\n${'='.repeat(50)}\n\n`;
+    list.forEach((t,i)=>{content+=`${i+1}. [${t.sta}] ${t.task}\n   Date: ${t.date} | ${t.cat} | Priority: ${t.pri}${t.recur?' | 🔁 '+t.recur:''}\n${t.notes?'   Notes: '+t.notes+'\n':''}\n`;});
+    filename=`gym_va_tasks_${stamp}.txt`;mime='text/plain';
+  } else if(fmt==='html'){
+    const statusColor={Completed:'#27500A','In Progress':'#633806','Not Started':'#791F1F','Waiting for Client':'#0C447C'};
+    const statusBg={Completed:'#EAF3DE','In Progress':'#FAEEDA','Not Started':'#FCEBEB','Waiting for Client':'#E6F1FB'};
+    const priColor={High:'#A32D2D',Medium:'#854F0B',Low:'#3B6D11'};
+    content=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Gym VA Tasks — ${stamp}</title>
+<style>body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 20px;background:#f9fafb;color:#111}
+h1{font-size:20px;border-bottom:3px solid #FF6B1A;padding-bottom:8px;margin-bottom:4px}
+.meta{font-size:12px;color:#666;margin-bottom:20px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+th{background:#1E1B4B;color:#fff;padding:9px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;text-align:left}
+td{padding:8px 12px;font-size:13px;border-bottom:1px solid #eee;vertical-align:top}
+.status{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+</style></head><body>
+<h1>🏋️ Gym VA Task Tracker — Geramel Tapis</h1>
+<div class="meta">Exported: ${new Date().toLocaleString('en-AU')} | ${list.length} tasks</div>
+<table><thead><tr><th>Date</th><th>Task</th><th>Category</th><th>Priority</th><th>Status</th><th>Notes</th></tr></thead><tbody>
+${list.map(t=>`<tr style="background:${statusBg[t.sta]||'#fff'}"><td>${t.date}</td><td>${(t.task||'').replace(/</g,'&lt;')}${t.recur?' 🔁':''}</td><td>${t.cat}</td><td style="color:${priColor[t.pri]};font-weight:700">${t.pri}</td><td><span class="status" style="background:${statusBg[t.sta]};color:${statusColor[t.sta]}">${t.sta}</span></td><td style="font-size:11px">${(t.notes||'').replace(/</g,'&lt;')}</td></tr>`).join('\n')}
+</tbody></table></body></html>`;
+    filename=`gym_va_tasks_${stamp}.html`;mime='text/html';
+  }
+  const blob=new Blob([content],{type:mime});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+  showToast(`Exported ${list.length} task(s) as ${fmt.toUpperCase()}`);
+}
+
+// ══════════════════════════════════════════════════════
 // BOOT
 // ══════════════════════════════════════════════════════
+// Default date filter to today
+document.getElementById('filter-date').value=todayISO;
 renderTasks();
 </script>
 </body>
